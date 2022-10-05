@@ -4,7 +4,8 @@
 ??
 
 ## Steps 
-??
+1. Work out distance between postcode (central) to MMC location using OSM
+2. Work out financial cost algorithm for each pt depending on mode of travel (ie. Myki cost per distance + Petrol cost per car model)
 
 ## Current Plan
 1. Use geospatial paper to test in R
@@ -14,6 +15,7 @@
 
 ## Current Progress
 1. Created chlorpleth map of the number of visitors to MMC from each postcode. Can be viewed https://rpubs.com/Mango117/948342 
+2. WIP
 
 
 ## Current Problems

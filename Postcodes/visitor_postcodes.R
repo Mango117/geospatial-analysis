@@ -53,7 +53,8 @@ basicDemographicsVIC <- right_join(postcodeboundariesAUS, basicDemographicsVIC,
 ## ---- ImportTransportData ----
 #import data from transport_data.csv
 transportData <- readr::read_csv(
-  here::here("transport_data.csv"))
+  here::here("Data",
+             "transport_data.csv"))
 #Convert N/A values to 0
 transportData[is.na(transportData)] <- 0
 class(transportData$ZIP) = "character"

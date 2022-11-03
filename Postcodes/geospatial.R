@@ -157,6 +157,44 @@ h <- function(y){
 cleanData$Cost <- h(cleanData)
 
 
+# ---- Write BoxPlots ----
+#Transport Type
+table(cleanData$Fuel_Type)
+car_data <- subset(cleanData, Fuel_Type == "G" | Fuel_Type == "D")
+ptv_data <- subset(cleanData, Fuel_Type == "P")
+boxplot(car_data$Cost, ptv_data$Cost, main = "Comparison of ptv vs car prices to MMC", ylab = ("Total Cost ($)"), xlab = "Transport Type", 
+        names = c("car (132)", "ptv (25)"), col = c("orange","red"))
+
+
+#Visitor Type
+table(cleanData$Vistortype)
+inpt_data <- subset(cleanData, Vistortype == "A")
+outpt_data <- subset(cleanData, Vistortype == "B")
+visit_data <- subset(cleanData, Vistortype == "C")
+boxplot(inpt_data$Cost, outpt_data$Cost, visit_data$Cost, main = "Comparison of visitor types", ylab = ("Total Cost ($)"), xlab = "Visitor Type", 
+        names = c("Inpt(3)", "Outpt(102)", "Visitor(52)"), col = c("orange","red", "yellow"))
+
+
+#Visitor Type
+table(cleanData$Age)
+age_to_29 <- subset(cleanData, Age == "A")
+age_to_39 <- subset(cleanData, Age == "B")
+age_to_59 <- subset(cleanData, Age == "C")
+age_to_79 <- subset(cleanData, Age == "D")
+age_over_80 <- subset(cleanData, Age == "E")
+boxplot(age_to_29$Cost, age_to_39$Cost, age_to_59$Cost, age_to_79$Cost, age_over_80$Cost,  main = "Comparison of visitor ages", ylab = ("Total Cost ($)"), xlab = "Visitor Age", 
+        names = c("18-29(14)", "30-39(12)", "40-59(42)", "60-79(77)", "Over 80(12)"), col = c("orange","red", "yellow", "green", "blue"))
+
+
+#Ambulatory Type
+table(cleanData$Ambulatorystatus)
+unassisted <- subset(cleanData, Ambulatorystatus == "A")
+stick <- subset(cleanData, Ambulatorystatus == "B")
+walker <- subset(cleanData, Ambulatorystatus == "C")
+wheelchair <- subset(cleanData, Ambulatorystatus == "D")
+boxplot(unassisted$Cost, stick$Cost, walker$Cost, wheelchair$Cost,  main = "Comparison of visitor ambulatory status", ylab = ("Total Cost ($)"), xlab = "Visitor Age", 
+        names = c("Unassisted", "Stick", "Walker", "Wheelchair"), col = c("orange","red", "yellow", "green"))
+
 
 # ---- Write CSV after dropping geodata ----
 df <- cleanData[-c(24)]

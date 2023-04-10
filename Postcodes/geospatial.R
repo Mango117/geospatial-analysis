@@ -196,6 +196,20 @@ boxplot(unassisted$Cost, stick$Cost, walker$Cost, wheelchair$Cost,  main = "Comp
         names = c("Unassisted(137)", "Stick(10)", "Walker(7)", "Wheelchair(3)"), col = c("orange","red", "yellow", "green"))
 
 
+#Combined plot of transport and ambulatory status vs cost
+library(ggplot2)
+
+cleanData$Transport_Class <- ifelse(cleanData$Fuel_Type %in% c("G", "D"), "Car",
+                                    ifelse(cleanData$Fuel_Type %in% c("P"), "Public Transport", "Other"))
+
+ggplot(cleanData, aes(x = interaction(Transport_Class, Ambulatorystatus), y = Cost, fill = Ambulatorystatus)) + 
+  geom_boxplot() + 
+  labs(x = "Transport and Ambulatory Status", y = "Cost") + 
+  theme_bw() + 
+  scale_fill_discrete(name = cleanData$Ambulatorystatus, labels = c("A=Unassisted", "B=Stick", "C=Walker", "D=Wheelchair"))
+
+
+
 # ---- Write CSV after dropping geodata ----
 df <- cleanData[-c(24)]
 write.csv(df,"/Users/manojarachige/Downloads/cleanData.csv", row.names = TRUE)

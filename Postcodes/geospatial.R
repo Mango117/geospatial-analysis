@@ -202,11 +202,20 @@ library(ggplot2)
 cleanData$Transport_Class <- ifelse(cleanData$Fuel_Type %in% c("G", "D"), "Car",
                                     ifelse(cleanData$Fuel_Type %in% c("P"), "Public Transport", "Other"))
 
+#box plot
 ggplot(cleanData, aes(x = interaction(Transport_Class, Ambulatorystatus), y = Cost, fill = Ambulatorystatus)) + 
   geom_boxplot() + 
   labs(x = "Transport and Ambulatory Status", y = "Cost") + 
   theme_bw() + 
   scale_fill_discrete(name = cleanData$Ambulatorystatus, labels = c("A=Unassisted", "B=Stick", "C=Walker", "D=Wheelchair"))
+
+#scatter plot
+ggplot(cleanData, aes(x = interaction(Transport_Class, Ambulatorystatus), y = Cost, color = Ambulatorystatus)) + 
+  geom_point() +
+  labs(x = "Transport and Ambulatory Status", y = "Cost", color = "Ambulatory Status") +
+  theme_bw() + 
+  scale_color_discrete(name = "Ambulatory Status", labels = c("A=Unassisted", "B=Stick", "C=Walker", "D=Wheelchair"))
+
 
 
 

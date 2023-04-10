@@ -32,7 +32,7 @@ library(GA)
 
 
 ## ---- SetWD ----
-setwd("/Users/manojarachige/Dropbox/Mac/Documents/Coding/Projects/Geospatial Analysis/Code/geospatial-analysis")
+setwd("/Users/manojarachige/Documents/Coding/Projects/Geospatial Analysis/geospatial-analysis/")
 
 
 ## ---- CensusData ----
@@ -163,7 +163,7 @@ table(cleanData$Fuel_Type)
 car_data <- subset(cleanData, Fuel_Type == "G" | Fuel_Type == "D")
 ptv_data <- subset(cleanData, Fuel_Type == "P")
 boxplot(car_data$Cost, ptv_data$Cost, main = "Comparison of ptv vs car prices to MMC", ylab = ("Total Cost ($)"), xlab = "Transport Type", 
-        names = c("car (132)", "ptv (25)"), col = c("orange","red"))
+        names = c("Car (132)", "Public Transport (25)"), col = c("orange","red"))
 
 
 #Visitor Type
@@ -172,7 +172,7 @@ inpt_data <- subset(cleanData, Vistortype == "A")
 outpt_data <- subset(cleanData, Vistortype == "B")
 visit_data <- subset(cleanData, Vistortype == "C")
 boxplot(inpt_data$Cost, outpt_data$Cost, visit_data$Cost, main = "Comparison of visitor types", ylab = ("Total Cost ($)"), xlab = "Visitor Type", 
-        names = c("Inpt(3)", "Outpt(102)", "Visitor(52)"), col = c("orange","red", "yellow"))
+        names = c("Inpatient(3)", "Outpatient(102)", "Visitor(52)"), col = c("orange","red", "yellow"))
 
 
 #Visitor Type
@@ -193,7 +193,7 @@ stick <- subset(cleanData, Ambulatorystatus == "B")
 walker <- subset(cleanData, Ambulatorystatus == "C")
 wheelchair <- subset(cleanData, Ambulatorystatus == "D")
 boxplot(unassisted$Cost, stick$Cost, walker$Cost, wheelchair$Cost,  main = "Comparison of visitor ambulatory status", ylab = ("Total Cost ($)"), xlab = "Visitor Age", 
-        names = c("Unassisted", "Stick", "Walker", "Wheelchair"), col = c("orange","red", "yellow", "green"))
+        names = c("Unassisted(137)", "Stick(10)", "Walker(7)", "Wheelchair(3)"), col = c("orange","red", "yellow", "green"))
 
 
 # ---- Write CSV after dropping geodata ----

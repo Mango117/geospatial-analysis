@@ -106,6 +106,11 @@ for (i in cleanData$Zip){
 }
 
 
+
+#Remove row with invalid postcode
+cleanData <- cleanData[-c(73), ]
+
+
 #parking prices
 cleanData$Cost_parking[cleanData$Cost_parking == "A"] <- 11
 cleanData$Cost_parking[cleanData$Cost_parking == "B"] <- 15
@@ -249,7 +254,43 @@ ggplot(cleanData, aes(x = interaction(Transport_Class, Ambulatorystatus), y = Co
   ) +
   scale_color_discrete(name = "Ambulatory Status", labels = c("A=Unassisted", "B=Stick", "C=Walker", "D=Wheelchair"))
   
+#combined scatter plot
 
+ggplot(cleanData, aes(x = Transport_Class, y = Cost, color = MMCDist)) + 
+  geom_jitter(aes(shape = Ambulatorystatus), width = 0.3, size = 3) + 
+  labs(x = "Transport Class", y = "Cost", color = "Distance from MMC") + 
+  theme_bw() + 
+  scale_shape_manual(values = c(15, 16, 17, 18), name = "Ambulatory Status", labels = c("A=Unassisted", "B=Stick", "C=Walker", "D=Wheelchair")) + 
+  scale_color_gradient(low = "#fc0303", high = "#fcfc03")
+  
+  
+
+
+#cost of parking %
+drivers <- filter(cleanData, Transport_Class == "Car")
+drivers$percentpark <- drivers$Cost_parking / drivers$Cost
+
+
+drivers <- drivers[complete.cases(drivers$percentpark), ]
+mean(drivers$percentpark)
+median(drivers$percentpark)
+max(drivers$percentpark)
+
+
+
+#scatter plot of cost vs car
+ggplot(drivers, aes(x = MMCDist, y = Cost, color = MMCDist)) + 
+  geom_point() + 
+  scale_color_gradient(low = "#fc0303", high = "#fcfc03") + 
+  geom_smooth(method = "lm", se = TRUE)
+
+
+#spearman rho of cost vs car
+result = cor(drivers$Cost, drivers$MMCDist, method = "spearman")
+cat("Spearman correlation coefficient is:", result)
+count(drivers)
+df = count(drivers) - 2
+cor.test(drivers$Cost, drivers$MMCDist, method = "spearman")
 
 
 # ---- Write CSV after dropping geodata ----

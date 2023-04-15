@@ -293,6 +293,15 @@ df = count(drivers) - 2
 cor.test(drivers$Cost, drivers$MMCDist, method = "spearman")
 
 
+#mean prices for car vs ptv
+carprice <- filter(cleanData, Transport_Class == "Car")
+mean(carprice$Cost)
+
+ptvprice <- filter(cleanData, Transport_Class == "Public Transport")
+mean(ptvprice$Cost)
+
+
+
 # ---- Write CSV after dropping geodata ----
 df <- cleanData[-c(24)]
 write.csv(df,"/Users/manojarachige/Downloads/cleanData.csv", row.names = TRUE)

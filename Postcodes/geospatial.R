@@ -390,7 +390,6 @@ ggplot(drivers, aes(x = State_Percentile, y = MMCDist, color = State_Percentile)
   geom_smooth(method = "lm", se = TRUE)
 
 
-
 #spearman rho of MMCDist vs SES
 result = cor(drivers$MMCDist, drivers$State_Percentile, method = "spearman")
 cat("Spearman correlation coefficient is:", result)
@@ -403,10 +402,11 @@ cor.test(drivers$MMCDist, drivers$State_Percentile, method = "spearman")
 #mean prices for car vs ptv
 carprice <- filter(cleanData, Transport_Class == "Car")
 mean(carprice$Cost)
+mean(carprice$State_Percentile)
 
 ptvprice <- filter(cleanData, Transport_Class == "Public Transport")
 mean(ptvprice$Cost)
-
+mean(ptvprice$State_Percentile)
 
 
 # ---- Write CSV after dropping geodata ----

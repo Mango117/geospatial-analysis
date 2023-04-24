@@ -46,12 +46,17 @@ basicDemographicsVIC <- readr::read_csv(
             "2016 Census GCP Postal Areas for VIC", 
             "2016Census_G01_VIC_POA.csv"))
 
+SESData <- readr::read_csv(
+  here::here("ABSData", 
+             "SES-Data", 
+             "IRSAD.csv"))
+
 
 
 ## --- TransportData Import and Clean ----
 transportData <- readr::read_csv(
   here::here("Data", 
-             "transport_data_MOD.csv"))
+             "transport_data_MOD2.csv"))
 
 colnames(transportData) <- c(transportData[1,])
 transportData <-transportData[-c(1),]
@@ -109,6 +114,8 @@ for (i in cleanData$Zip){
 
 #Remove row with invalid postcode
 cleanData <- cleanData[-c(73), ]
+#Remove row with electric car
+cleanData <- cleanData[-c(33), ]
 
 
 #parking prices
@@ -140,19 +147,26 @@ class(cleanData$Public_cost) = "double"
 #fuel prices from https://fuelprice.io/vic/melbourne/unleaded/ 
 
 #replace NA with P and E with P
-cleanData$Fuel_Type <- replace_na(cleanData$Fuel_Type, "P")
-cleanData$Fuel_Type <-replace(cleanData$Fuel_Type, cleanData$Fuel_Type == "E" , "P")
+#cleanData$Fuel_Type <- replace_na(cleanData$Fuel_Type, "P")
+#cleanData$Fuel_Type <-replace(cleanData$Fuel_Type, cleanData$Fuel_Type == "E" , "P")
 class(cleanData$Fuel_Type) = "character"
 
 
-
+#G for gasoline
 f <- function(t){
   ifelse(cleanData$Fuel_Type == "G", ((cleanData$`Fuel _Consumption` * cleanData$MMCDist)/100 * 1.76 + cleanData$Cost_parking),cleanData$Cost)
 }
 cleanData$Cost <- f(cleanData)
 
+#D for Diesel
 f <- function(t){
   ifelse(cleanData$Fuel_Type == "D", ((cleanData$`Fuel _Consumption` * cleanData$MMCDist)/100 * 2.31 + cleanData$Cost_parking),cleanData$Cost)
+}
+cleanData$Cost <- f(cleanData)
+
+#Hospital Transport
+f <- function(t){
+  ifelse(cleanData$Transport == "E", (cleanData$Hospital_trans_cost),cleanData$Cost)
 }
 cleanData$Cost <- f(cleanData)
 
@@ -161,14 +175,64 @@ h <- function(y){
 }
 cleanData$Cost <- h(cleanData)
 
+class(cleanData$Cost) = "numeric"
+
+
+
+
+#Add SES Data to cleanData
+
+class(SESData$POA_Code) = "character"
+
+cleanData["Resident_Pop"] <- NA
+cleanData["Score"] <- NA
+cleanData["AUS_Rank"] <- NA
+cleanData["AUS_Decile"] <- NA
+cleanData["AUS_Percentile"] <- NA
+cleanData["State"] <- NA
+cleanData["State_Rank"] <- NA
+cleanData["State_Decile"] <- NA
+cleanData["State_Percentile"] <- NA
+
+
+for (i in cleanData$Zip){
+  for (j in SESData$POA_Code){
+    if (i == j){
+      cleanData$Resident_Pop[cleanData$Zip == i] <- SESData$Resident_Pop[SESData$POA_Code == j]
+      cleanData$Score[cleanData$Zip == i] <- SESData$Score[SESData$POA_Code == j]
+      cleanData$AUS_Rank[cleanData$Zip == i] <- SESData$AUS_Rank[SESData$POA_Code == j]
+      cleanData$AUS_Decile[cleanData$Zip == i] <- SESData$AUS_Decile[SESData$POA_Code == j]
+      cleanData$AUS_Percentile[cleanData$Zip == i] <- SESData$AUS_Percentile[SESData$POA_Code == j]
+      cleanData$State[cleanData$Zip == i] <- SESData$State[SESData$POA_Code == j]
+      cleanData$State_Rank[cleanData$Zip == i] <- SESData$State_Rank[SESData$POA_Code == j]
+      cleanData$State_Decile[cleanData$Zip == i] <- SESData$State_Decile[SESData$POA_Code == j]
+      cleanData$State_Percentile[cleanData$Zip == i] <- SESData$State_Percentile[SESData$POA_Code == j]
+    }
+  }
+}
+
+
+
+
 
 # ---- Write BoxPlots ----
-#Transport Type
+
+#Transport Type all
 table(cleanData$Fuel_Type)
+ptv_data <- subset(cleanData, Transport == "A")
+taxi_data <- subset(cleanData, Transport == "C")
+car_data <- subset(cleanData, Transport == "D")
+hosptrans_data <- subset(cleanData, Transport == "E")
+boxplot(ptv_data$Cost, taxi_data$Cost, car_data$Cost, hosptrans_data$Cost, main = "Comparison of transport types to MMC", ylab = ("Total Cost ($)"), xlab = "Transport Type", 
+        names = c("Public Transport (17)", "Taxi (4)", "Car (133)", "Hospital Transport (1)"), col = c("orange","red", "yellow", "green"))
+
+
+#Transport Type car vs ptv
+table(cleanData$Fuel_Type)
+ptv_data <- subset(cleanData, Transport == "A")
 car_data <- subset(cleanData, Fuel_Type == "G" | Fuel_Type == "D")
-ptv_data <- subset(cleanData, Fuel_Type == "P")
 boxplot(car_data$Cost, ptv_data$Cost, main = "Comparison of ptv vs car prices to MMC", ylab = ("Total Cost ($)"), xlab = "Transport Type", 
-        names = c("Car (132)", "Public Transport (25)"), col = c("orange","red"))
+        names = c("Car (132)", "Public Transport (17)"), col = c("orange","red"))
 
 
 #Visitor Type
@@ -198,14 +262,14 @@ stick <- subset(cleanData, Ambulatorystatus == "B")
 walker <- subset(cleanData, Ambulatorystatus == "C")
 wheelchair <- subset(cleanData, Ambulatorystatus == "D")
 boxplot(unassisted$Cost, stick$Cost, walker$Cost, wheelchair$Cost,  main = "Comparison of visitor ambulatory status", ylab = ("Total Cost ($)"), xlab = "Visitor Age", 
-        names = c("Unassisted(137)", "Stick(10)", "Walker(7)", "Wheelchair(3)"), col = c("orange","red", "yellow", "green"))
+        names = c("Unassisted(135)", "Stick(10)", "Walker(7)", "Wheelchair(3)"), col = c("orange","red", "yellow", "green"))
 
 
 #Combined plot of transport and ambulatory status vs cost
 library(ggplot2)
+cleanData$Transport_Class <- ifelse(cleanData$Transport %in% c("D"), "Car",
+                                    ifelse(cleanData$Transport %in% c("A"), "Public Transport", "Other"))
 
-cleanData$Transport_Class <- ifelse(cleanData$Fuel_Type %in% c("G", "D"), "Car",
-                                    ifelse(cleanData$Fuel_Type %in% c("P"), "Public Transport", "Other"))
 
 #box plot
 ggplot(cleanData, aes(x = interaction(Transport_Class, Ambulatorystatus), y = Cost, fill = Ambulatorystatus)) + 
@@ -238,6 +302,7 @@ ggplot(cleanData, aes(x = interaction(Transport_Class, Ambulatorystatus), y = Co
   theme_bw() + 
   scale_color_discrete(name = "Ambulatory Status", labels = c("A=Unassisted", "B=Stick", "C=Walker", "D=Wheelchair"))
 
+
 #scatter plot
 ggplot(cleanData, aes(x = interaction(Transport_Class, Ambulatorystatus), y = Cost, color = Ambulatorystatus)) + 
   geom_point() +
@@ -254,8 +319,8 @@ ggplot(cleanData, aes(x = interaction(Transport_Class, Ambulatorystatus), y = Co
   ) +
   scale_color_discrete(name = "Ambulatory Status", labels = c("A=Unassisted", "B=Stick", "C=Walker", "D=Wheelchair"))
   
-#combined scatter plot
 
+#combined scatter plot
 ggplot(cleanData, aes(x = Transport_Class, y = Cost, color = MMCDist)) + 
   geom_jitter(aes(shape = Ambulatorystatus), width = 0.3, size = 3) + 
   labs(x = "Transport Class", y = "Cost", color = "Distance from MMC") + 
@@ -263,8 +328,18 @@ ggplot(cleanData, aes(x = Transport_Class, y = Cost, color = MMCDist)) +
   scale_shape_manual(values = c(15, 16, 17, 18), name = "Ambulatory Status", labels = c("A=Unassisted", "B=Stick", "C=Walker", "D=Wheelchair")) + 
   scale_color_gradient(low = "#fc0303", high = "#fcfc03")
   
-  
 
+
+#combined scatter plot
+ggplot(cleanData, aes(x = Transport_Class, y = Cost, color = State_Percentile)) + 
+  geom_jitter(aes(shape = Ambulatorystatus), width = 0.3, size = 3) + 
+  labs(x = "Transport Class", y = "Cost", color = "State SES Percentile") + 
+  theme_bw() + 
+  scale_shape_manual(values = c(15, 16, 17, 18), name = "Ambulatory Status", labels = c("A=Unassisted", "B=Stick", "C=Walker", "D=Wheelchair")) + 
+  scale_color_gradient(low = "#000291", high = "#70cdff")
+
+
+  
 
 #cost of parking %
 drivers <- filter(cleanData, Transport_Class == "Car")
@@ -278,19 +353,51 @@ max(drivers$percentpark)
 
 
 
-#scatter plot of cost vs car
+#scatter plot of cost vs MMCDist
 ggplot(drivers, aes(x = MMCDist, y = Cost, color = MMCDist)) + 
   geom_point() + 
   scale_color_gradient(low = "#fc0303", high = "#fcfc03") + 
   geom_smooth(method = "lm", se = TRUE)
 
 
-#spearman rho of cost vs car
+#spearman rho of cost vs MMCDist
 result = cor(drivers$Cost, drivers$MMCDist, method = "spearman")
 cat("Spearman correlation coefficient is:", result)
 count(drivers)
 df = count(drivers) - 2
 cor.test(drivers$Cost, drivers$MMCDist, method = "spearman")
+
+
+#scatter plot of cost vs SES
+ggplot(drivers, aes(x = State_Percentile, y = Cost, color = State_Percentile)) + 
+  geom_point() + 
+  scale_color_gradient(low = "#000291", high = "#70cdff") + 
+  geom_smooth(method = "lm", se = TRUE)
+
+
+#spearman rho of cost vs SES
+result = cor(drivers$Cost, drivers$State_Percentile, method = "spearman")
+cat("Spearman correlation coefficient is:", result)
+count(drivers)
+df = count(drivers) - 2
+cor.test(drivers$Cost, drivers$State_Percentile, method = "spearman")
+
+
+#scatter plot of MMCDist vs SES
+ggplot(drivers, aes(x = State_Percentile, y = MMCDist, color = State_Percentile)) + 
+  geom_point() + 
+  scale_color_gradient(low = "#005c22", high = "#27f231") + 
+  geom_smooth(method = "lm", se = TRUE)
+
+
+
+#spearman rho of MMCDist vs SES
+result = cor(drivers$MMCDist, drivers$State_Percentile, method = "spearman")
+cat("Spearman correlation coefficient is:", result)
+count(drivers)
+df = count(drivers) - 2
+cor.test(drivers$MMCDist, drivers$State_Percentile, method = "spearman")
+
 
 
 #mean prices for car vs ptv

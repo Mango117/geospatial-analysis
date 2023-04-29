@@ -227,6 +227,17 @@ boxplot(ptv_data$Cost, taxi_data$Cost, car_data$Cost, hosptrans_data$Cost, main 
         names = c("Public Transport (17)", "Taxi (4)", "Car (133)", "Hospital Transport (1)"), col = c("orange","red", "yellow", "green"))
 
 
+#Travel time all
+table(cleanData$Fuel_Type)
+Time_under_20mins <- subset(cleanData, Time_trans == "A")
+Time_20mins_1hr <- subset(cleanData, Time_trans == "B")
+Time_1hr_2hr <- subset(cleanData, Time_trans == "C")
+Time_over_2hrs <- subset(cleanData, Time_trans == "D")
+boxplot(Time_under_20mins$Cost, Time_20mins_1hr$Cost, Time_1hr_2hr$Cost, Time_over_2hrs$Cost, main = "Comparison of times to MMC", ylab = ("Total Cost ($)"), xlab = "Travel Time", 
+        names = c("<20min (38)", "20min-1hr (84)", "1hr-2hr(29)", ">2hr(4)"), col = c("orange","red", "yellow", "green"))
+
+
+
 #Transport Type car vs ptv
 table(cleanData$Fuel_Type)
 ptv_data <- subset(cleanData, Transport == "A")
@@ -278,6 +289,8 @@ ggplot(cleanData, aes(x = interaction(Transport_Class, Ambulatorystatus), y = Co
   theme_bw() + 
   scale_fill_discrete(name = cleanData$Ambulatorystatus, labels = c("A=Unassisted", "B=Stick", "C=Walker", "D=Wheelchair"))
 
+
+
 #box plot
 ggplot(cleanData, aes(x = interaction(Transport_Class, Ambulatorystatus), y = Cost, fill = Ambulatorystatus)) + 
   geom_boxplot() + 
@@ -318,7 +331,7 @@ ggplot(cleanData, aes(x = interaction(Transport_Class, Ambulatorystatus), y = Co
     inherit.aes = TRUE
   ) +
   scale_color_discrete(name = "Ambulatory Status", labels = c("A=Unassisted", "B=Stick", "C=Walker", "D=Wheelchair"))
-  
+
 
 #combined scatter plot
 ggplot(cleanData, aes(x = Transport_Class, y = Cost, color = MMCDist)) + 
@@ -327,6 +340,7 @@ ggplot(cleanData, aes(x = Transport_Class, y = Cost, color = MMCDist)) +
   theme_bw() + 
   scale_shape_manual(values = c(15, 16, 17, 18), name = "Ambulatory Status", labels = c("A=Unassisted", "B=Stick", "C=Walker", "D=Wheelchair")) + 
   scale_color_gradient(low = "#fc0303", high = "#fcfc03")
+
   
 
 
@@ -396,6 +410,29 @@ cat("Spearman correlation coefficient is:", result)
 count(drivers)
 df = count(drivers) - 2
 cor.test(drivers$MMCDist, drivers$State_Percentile, method = "spearman")
+
+
+#Kruskal-Wallis test of time vs cost
+continuous_cost <- Time_under_20mins$Cost
+categorical <- rep(c("Under20"), each = nrow(Time_under_20mins))
+group1data <- data.frame(c(continuous_cost), categorical)
+
+continuous_cost <- Time_20mins_1hr$Cost
+categorical <- rep(c("From20to1"), each = nrow(Time_20mins_1hr))
+group2data <- data.frame(c(continuous_cost), categorical)
+
+continuous_cost <- Time_1hr_2hr$Cost
+categorical <- rep(c("From1to2"), each = nrow(Time_1hr_2hr))
+group3data <- data.frame(c(continuous_cost), categorical)
+
+continuous_cost <- Time_over_2hrs$Cost
+categorical <- rep(c("Over2"), each = nrow(Time_over_2hrs))
+group4data <- data.frame(c(continuous_cost), categorical)
+
+combined_df <- rbind(group1data, group2data, group3data, group4data)
+
+kruskal.test(combined_df[, 1] ~ combined_df[, 2])
+
 
 
 

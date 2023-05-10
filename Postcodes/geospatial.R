@@ -218,23 +218,23 @@ for (i in cleanData$Zip){
 # ---- Write BoxPlots ----
 
 #Transport Type all
-table(cleanData$Fuel_Type)
+table(cleanData$Transport)
 ptv_data <- subset(cleanData, Transport == "A")
 taxi_data <- subset(cleanData, Transport == "C")
 car_data <- subset(cleanData, Transport == "D")
 hosptrans_data <- subset(cleanData, Transport == "E")
 boxplot(ptv_data$Cost, taxi_data$Cost, car_data$Cost, hosptrans_data$Cost, main = "Comparison of transport types to MMC", ylab = ("Total Cost ($)"), xlab = "Transport Type", 
-        names = c("Public Transport (17)", "Taxi (4)", "Car (133)", "Hospital Transport (1)"), col = c("orange","red", "yellow", "green"))
+        names = c("Public Transport(n=17)", "Taxi(n=4)", "Car(n=133)", "Hospital Transport(n=1)"), col = c("orange","red", "yellow", "green"))
 
 
 #Travel time all
-table(cleanData$Fuel_Type)
+table(cleanData$Time_trans)
 Time_under_20mins <- subset(cleanData, Time_trans == "A")
 Time_20mins_1hr <- subset(cleanData, Time_trans == "B")
 Time_1hr_2hr <- subset(cleanData, Time_trans == "C")
 Time_over_2hrs <- subset(cleanData, Time_trans == "D")
 boxplot(Time_under_20mins$Cost, Time_20mins_1hr$Cost, Time_1hr_2hr$Cost, Time_over_2hrs$Cost, main = "Comparison of times to MMC", ylab = ("Total Cost ($)"), xlab = "Travel Time", 
-        names = c("<20min (38)", "20min-1hr (84)", "1hr-2hr(29)", ">2hr(4)"), col = c("orange","red", "yellow", "green"))
+        names = c("<20min (n=38)", "20min-1hr (n=84)", "1hr-2hr(n=29)", ">2hr(n=4)"), col = c("orange","red", "yellow", "green"))
 
 
 
@@ -272,8 +272,8 @@ unassisted <- subset(cleanData, Ambulatorystatus == "A")
 stick <- subset(cleanData, Ambulatorystatus == "B")
 walker <- subset(cleanData, Ambulatorystatus == "C")
 wheelchair <- subset(cleanData, Ambulatorystatus == "D")
-boxplot(unassisted$Cost, stick$Cost, walker$Cost, wheelchair$Cost,  main = "Comparison of visitor ambulatory status", ylab = ("Total Cost ($)"), xlab = "Visitor Age", 
-        names = c("Unassisted(135)", "Stick(10)", "Walker(7)", "Wheelchair(3)"), col = c("orange","red", "yellow", "green"))
+boxplot(unassisted$Cost, stick$Cost, walker$Cost, wheelchair$Cost,  main = "Comparison of visitor ambulatory status", ylab = ("Total Cost ($)"), xlab = "Ambulatory Status", 
+        names = c("Unassisted(n=135)", "Stick(n=10)", "Walker(n=7)", "Wheelchair(n=3)"), col = c("orange","red", "yellow", "green"))
 
 
 #Combined plot of transport and ambulatory status vs cost
@@ -341,6 +341,20 @@ ggplot(cleanData, aes(x = Transport_Class, y = Cost, color = MMCDist)) +
   scale_shape_manual(values = c(15, 16, 17, 18), name = "Ambulatory Status", labels = c("A=Unassisted", "B=Stick", "C=Walker", "D=Wheelchair")) + 
   scale_color_gradient(low = "#fc0303", high = "#fcfc03")
 
+
+
+#combined scatter plot
+cleanData$Time_trans <- replace(cleanData$Time_trans, cleanData$Time_trans == "A", "1) <20min(n=38)")
+cleanData$Time_trans <- replace(cleanData$Time_trans, cleanData$Time_trans == "B", "2) 20min-1hr(n=84)")
+cleanData$Time_trans <- replace(cleanData$Time_trans, cleanData$Time_trans == "C", "3) 1hr-2hr(29)")
+cleanData$Time_trans <- replace(cleanData$Time_trans, cleanData$Time_trans == "D", "4) >2hr(4)")
+ggplot(cleanData, aes(x = Time_trans, y = Cost, color = MMCDist)) +
+  geom_jitter(aes(shape = Ambulatorystatus), width = 0.3, size = 3) + 
+  labs(x = "Time taken to travel to MMC", y = "Cost ($)", color = "Distance from MMC (km)") + 
+  theme_bw() + 
+  scale_shape_manual(values = c(15, 16, 17, 18), name = "Ambulatory Status", labels = c("A=Unassisted", "B=Stick", "C=Walker", "D=Wheelchair")) + 
+  scale_color_gradient(low = "#fc0303", high = "#fcfc03")
+
   
 
 
@@ -371,7 +385,8 @@ max(drivers$percentpark)
 ggplot(drivers, aes(x = MMCDist, y = Cost, color = MMCDist)) + 
   geom_point() + 
   scale_color_gradient(low = "#fc0303", high = "#fcfc03") + 
-  geom_smooth(method = "lm", se = TRUE)
+  geom_smooth(method = "lm", se = TRUE) + 
+  labs(x = "Distance from MMC (km)", y = "Cost ($)", color = "Distance(km)")
 
 
 #spearman rho of cost vs MMCDist
@@ -380,6 +395,10 @@ cat("Spearman correlation coefficient is:", result)
 count(drivers)
 df = count(drivers) - 2
 cor.test(drivers$Cost, drivers$MMCDist, method = "spearman")
+
+#linear regression of cost vs MMCDist
+model <- lm(Cost ~ MMCDist, data = drivers)
+summary(model)
 
 
 #scatter plot of cost vs SES
@@ -397,11 +416,17 @@ df = count(drivers) - 2
 cor.test(drivers$Cost, drivers$State_Percentile, method = "spearman")
 
 
+#linear regression of cost vs SES
+model <- lm(Cost ~ State_Percentile, data = drivers)
+summary(model)
+
+
 #scatter plot of MMCDist vs SES
 ggplot(drivers, aes(x = State_Percentile, y = MMCDist, color = State_Percentile)) + 
   geom_point() + 
   scale_color_gradient(low = "#005c22", high = "#27f231") + 
-  geom_smooth(method = "lm", se = TRUE)
+  geom_smooth(method = "lm", se = TRUE) + 
+  labs(x = "IRSAD Percentile relative to VIC", y = "Distance from MMC (km)", color = "Distance(km)")
 
 
 #spearman rho of MMCDist vs SES
@@ -410,6 +435,12 @@ cat("Spearman correlation coefficient is:", result)
 count(drivers)
 df = count(drivers) - 2
 cor.test(drivers$MMCDist, drivers$State_Percentile, method = "spearman")
+
+
+#linear regression o MMCDist vs SES
+model <- lm(MMCDist ~ State_Percentile, data = drivers)
+summary(model)
+
 
 
 #Kruskal-Wallis test of time vs cost
@@ -444,6 +475,84 @@ mean(carprice$State_Percentile)
 ptvprice <- filter(cleanData, Transport_Class == "Public Transport")
 mean(ptvprice$Cost)
 mean(ptvprice$State_Percentile)
+
+
+
+
+# ---- Demographic data table ----
+library(finalfit)
+
+explanatory <- c("Vistortype", "Age", "Ambulatorystatus", "Time_trans", "State_Percentile", "MMCDist", "Cost")
+demotab <- cleanData %>%
+  summary_factorlist("Transport", explanatory,
+                     p=TRUE, na_include=TRUE)
+write.csv(demotab, "/Users/manojarachige/Downloads/demotab.csv", row.names = TRUE)
+
+
+
+# ---- Percentage Parking ----
+car_data["PercentPark"] <- car_data$Cost_parking/car_data$Cost
+car_data_noNA <- car_data[complete.cases(car_data$PercentPark),]
+mean(car_data_noNA$PercentPark)
+
+
+
+# ---- Create a Pivot Table and display chloropleth using leaflet ----
+library(dplyr)
+library(tidyr)
+
+## Create a pivot table
+pivot_table <- cleanData %>%
+  group_by(Zip) %>%
+  summarize(avg_cost = mean(Cost), avg_distance = mean(MMCDist), avg_ses = mean(State_Percentile), count = n())
+
+## right join to the geo data
+geoData <- right_join(basicDemographicsVIC, pivot_table, 
+                            by=c("POA_CODE16" = "Zip"))
+
+## Reproduce the existing area column as a demo.
+geoData <- mutate(geoData, 
+                        PostcodeArea=units::set_units(st_area(geometry), km^2))
+
+## Distance to MMC
+geoData <- sf::st_transform( geoData, crs = sf::st_crs( MMCLocation ) )
+geoData <- mutate(geoData, 
+                        DistanceToMMCforVisit=units::set_units(st_distance(geometry,MMCLocation)[,1], km))
+
+
+
+## comments re auto-great-circle, straight line assumption, 
+## distance to polygon or polygon-centroid ...
+plot(geoData["DistanceToMMCforVisit"])
+
+
+## plot
+
+## tables to paste into latex
+tt <- knitr::kable(select(head(geoData), POA_NAME, Tot_P_P, count, DistanceToMMCforVisit, avg_cost, avg_ses), format="latex")
+writeLines(tt, "mmcdemograhics")
+
+
+## ---- InteractiveDisplay ----
+library(tmap)
+tmap_mode("view")
+
+MMCLocation <- mutate(MMCLocation, ID="Monash Medical Centre")
+
+tm_shape(geoData, name="Data by Postcode") + 
+  tm_polygons("count", id="POA_NAME", popup.vars=c("count"), alpha=0.6, interactive = TRUE) +
+  tm_shape(MMCLocation) + tm_markers() + 
+  tm_basemap("OpenStreetMap")
+
+
+names(geoData)[names(geoData) == "avg_ses"] <- "IRSAD"
+tm_shape(geoData, name="Data by Postcode") + 
+  tm_polygons("IRSAD", id="IRSAD", popup.vars=c("IRSAD"), alpha=0.6, palette = get_brewer_pal("Greens", n = 15, contrast = c(0.15, 1)), interactive = TRUE) +
+  tm_shape(MMCLocation) + tm_markers()
+
+
+
+
 
 
 # ---- Write CSV after dropping geodata ----

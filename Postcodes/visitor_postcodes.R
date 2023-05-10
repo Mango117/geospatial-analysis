@@ -87,12 +87,14 @@ plot(transportData["DistanceToMMCforVisit"])
 
 ## ---- FilteringPostcodes ----
 ## Make a small dataset for MMC surrounds.
-basicTransportData <- filter(transportData, DistanceToMMC < set_units(20, km))
+basicTransportData <- filter(transportData, DistanceToMMCforVisit < set_units(20, km))
 
 ## ---- PostcodesTable ----
 ## tables to paste into latex
-tt <- knitr::kable(select(head(basicTransportData), POA_NAME, Tot_P_P, number_patients, DistanceToMMC), format="latex")
+tt <- knitr::kable(select(head(basicTransportData), POA_NAME, Tot_P_P, number_patients, DistanceToMMCforVisit), format="latex")
 writeLines(tt, "mmcdemograhics")
+
+
 ## ---- InteractiveDisplay ----
 library(tmap)
 tmap_mode("view")
